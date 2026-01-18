@@ -1,15 +1,27 @@
 import streamlit as st
 import json
+import os
+from streamlit.runtime.scriptrunner import RerunException  # Updated import for rerun
 
 st.set_page_config(page_title="NEET Offline Practice", layout="centered")
 
 # -------------------- LOAD DATA --------------------
 def load_mcqs(subject):
-    with open(f"mcqs/{subject.lower()}.json", "r", encoding="utf-8") as f:
+    """Load MCQs JSON file safely"""
+    path = os.path.join(os.path.dirname(__file__), "mcqs", f"{subject.lower()}.json")
+    if not os.path.exists(path):
+        st.error(f"MCQ file for '{subject}' not found!\nExpected at: {path}")
+        return []
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 def load_layout():
-    with open("config/layout.json", "r") as f:
+    """Load layout configuration JSON safely"""
+    path = os.path.join(os.path.dirname(__file__), "config", "layout.json")
+    if not os.path.exists(path):
+        st.error(f"Layout file not found!\nExpected at: {path}")
+        return {}
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 layout = load_layout()
@@ -39,18 +51,18 @@ def go(page):
     st.session_state.page = page
     try:
         st.experimental_rerun()
-    except st.script_runner.RerunException:
+    except RerunException:
         pass
 
 # -------------------- HOME PAGE --------------------
 def home():
-    st.title(layout["app_title"])
+    st.title(layout.get("app_title", "NEET Offline Practice"))
     st.subheader("NCERT Based | Real Exam Pattern")
 
-    for idx, item in enumerate(layout["home_menu"]):
-        if st.button(item["title"], key=f"home_{idx}"):
-            go(item["page"])
-        st.caption(item["description"])
+    for idx, item in enumerate(layout.get("home_menu", [])):
+        if st.button(item.get("title", f"Menu {idx}"), key=f"home_{idx}"):
+            go(item.get("page", "Home"))
+        st.caption(item.get("description", ""))
 
 # -------------------- BOOKS PAGE --------------------
 def books_page():
@@ -66,10 +78,14 @@ def books_page():
 def practice_page():
     st.title("📝 MCQ Practice")
 
-    subject = st.selectbox("Select Subject", layout["subjects"])
+    subjects = layout.get("subjects", ["Biology", "Physics", "Chemistry"])
+    subject = st.selectbox("Select Subject", subjects)
 
     # Load MCQs
     mcq = load_mcq(subject)
+    if not mcq:
+        st.warning("No MCQs found for this subject.")
+        return
 
     # Initialize answers if not already set
     if subject not in st.session_state.answers:
@@ -77,13 +93,15 @@ def practice_page():
 
     for i, q in enumerate(mcqs):
         st.markdown(f"**Q{i+1}. {q['question']}**")
+        options = list(q["options"].keys())
+        default_index = 0
+        if i in st.session_state.answers[subject]:
+            default_index = options.index(st.session_state.answers[subject][i])
         st.session_state.answers[subject][i] = st.radio(
             "Choose option:",
-            list(q["options"].keys()),
+            options,
             key=f"{subject}_{i}",
-            index=list(q["options"].keys()).index(
-                st.session_state.answers[subject].get(i, list(q["options"].keys())[0])
-            )
+            index=default_index
         )
 
     if st.button("✅ Submit"):
@@ -92,22 +110,22 @@ def practice_page():
 # -------------------- RESULT PAGE --------------------
 def calculate_result(subject, mcqs):
     score = 0
-    scheme = layout["marking_scheme"]
+    scheme = layout.get("marking_scheme", {"correct": 1, "wrong": 0})
 
     for i, q in enumerate(mcqs):
         selected = st.session_state.answers[subject].get(i)
         if selected == q["answer"]:
-            score += scheme["correct"]
+            score += scheme.get("correct", 1)
         elif selected:
-            score += scheme["wrong"]
+            score += scheme.get("wrong", 0)
 
     st.session_state.score = score
-    st.session_state.total = len(mcqs) * scheme["correct"]
+    st.session_state.total = len(mcqs) * scheme.get("correct", 1)
     st.session_state.page = "Result"
 
     try:
         st.experimental_rerun()
-    except st.script_runner.RerunException:
+    except RerunException:
         pass
 
 def result_page():
