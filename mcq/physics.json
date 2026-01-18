@@ -1,0 +1,37 @@
+[
+  {"question":"SI unit of force is?","options":{"A":"Newton","B":"Dyne","C":"Joule","D":"Watt"},"answer":"A","explanation":"Force SI unit is Newton."},
+  {"question":"Which law explains inertia?","options":{"A":"First law","B":"Second law","C":"Third law","D":"Law of gravitation"},"answer":"A","explanation":"Newton’s first law defines inertia."},
+  {"question":"Dimensional formula of velocity?","options":{"A":"LT-1","B":"L2T-2","C":"MLT-2","D":"ML-1T-1"},"answer":"A","explanation":"Velocity = displacement/time."},
+  {"question":"Unit of electric current?","options":{"A":"Volt","B":"Ampere","C":"Ohm","D":"Coulomb"},"answer":"B","explanation":"Current SI unit is Ampere."},
+  {"question":"Speed of light in vacuum is?","options":{"A":"3×10⁸ m/s","B":"3×10⁶ m/s","C":"3×10⁵ m/s","D":"3×10⁴ m/s"},"answer":"A","explanation":"Standard physical constant."},
+
+  {"question":"Which mirror forms virtual image always?","options":{"A":"Concave","B":"Convex","C":"Plane","D":"Concave & plane"},"answer":"D","explanation":"Plane and convex mirrors form virtual images."},
+  {"question":"Ohm’s law relates?","options":{"A":"V,I","B":"I,R","C":"V,R","D":"V,I,R"},"answer":"D","explanation":"V = IR."},
+  {"question":"SI unit of power?","options":{"A":"Joule","B":"Watt","C":"Volt","D":"Newton"},"answer":"B","explanation":"Power unit is Watt."},
+  {"question":"Frequency unit is?","options":{"A":"Hz","B":"m/s","C":"rad","D":"Tesla"},"answer":"A","explanation":"Frequency measured in Hertz."},
+  {"question":"Lens power unit?","options":{"A":"Dioptre","B":"Metre","C":"Cm","D":"Second"},"answer":"A","explanation":"Power = 1/f (dioptre)."},
+
+  {"question":"Work done depends on?","options":{"A":"Force","B":"Displacement","C":"Angle","D":"All"},"answer":"D","explanation":"W = F·s·cosθ."},
+  {"question":"Unit of momentum?","options":{"A":"kg m/s","B":"N s","C":"Both","D":"J"},"answer":"C","explanation":"Momentum units are equivalent."},
+  {"question":"Which wave needs medium?","options":{"A":"Light","B":"Radio","C":"Sound","D":"X-ray"},"answer":"C","explanation":"Sound is mechanical wave."},
+  {"question":"Unit of pressure?","options":{"A":"Pascal","B":"Newton","C":"Joule","D":"Bar"},"answer":"A","explanation":"SI unit is Pascal."},
+  {"question":"Transformer works on?","options":{"A":"DC","B":"AC","C":"Battery","D":"Cell"},"answer":"B","explanation":"AC required for changing flux."},
+
+  {"question":"SI unit of charge?","options":{"A":"Ampere","B":"Volt","C":"Coulomb","D":"Ohm"},"answer":"C","explanation":"Charge unit is Coulomb."},
+  {"question":"Mirror formula is?","options":{"A":"1/f=1/v+1/u","B":"f=v+u","C":"f=vu","D":"None"},"answer":"A","explanation":"Standard mirror formula."},
+  {"question":"Acceleration due to gravity is approx?","options":{"A":"9.8 m/s²","B":"10 m/s","C":"8 m/s²","D":"9.8 km/s²"},"answer":"A","explanation":"g ≈ 9.8 m/s²."},
+  {"question":"Which is scalar?","options":{"A":"Force","B":"Velocity","C":"Acceleration","D":"Speed"},"answer":"D","explanation":"Speed has magnitude only."},
+  {"question":"Unit of resistance?","options":{"A":"Ohm","B":"Ampere","C":"Volt","D":"Watt"},"answer":"A","explanation":"Resistance unit is Ohm."},
+
+  {"question":"Nuclear fission used in?","options":{"A":"Sun","B":"Reactor","C":"LED","D":"Laser"},"answer":"B","explanation":"Fission in reactors."},
+  {"question":"Sound speed is highest in?","options":{"A":"Gas","B":"Liquid","C":"Solid","D":"Vacuum"},"answer":"C","explanation":"Particles are closest in solids."},
+  {"question":"Which has no mass?","options":{"A":"Electron","B":"Proton","C":"Photon","D":"Neutron"},"answer":"C","explanation":"Photon has no rest mass."},
+  {"question":"Energy stored in spring?","options":{"A":"KE","B":"PE","C":"Heat","D":"Sound"},"answer":"B","explanation":"Elastic potential energy."},
+  {"question":"SI unit of magnetic field?","options":{"A":"Tesla","B":"Weber","C":"Henry","D":"Ampere"},"answer":"A","explanation":"Magnetic field unit is Tesla."},
+
+  {"question":"Which is renewable energy?","options":{"A":"Coal","B":"Petroleum","C":"Solar","D":"Gas"},"answer":"C","explanation":"Solar energy is renewable."},
+  {"question":"Work done in circular motion?","options":{"A":"Max","B":"Min","C":"Zero","D":"Infinite"},"answer":"C","explanation":"Force perpendicular to displacement."},
+  {"question":"SI unit of heat?","options":{"A":"Calorie","B":"Joule","C":"Kelvin","D":"Watt"},"answer":"B","explanation":"Heat is energy."},
+  {"question":"Refraction occurs due to?","options":{"A":"Reflection","B":"Speed change","C":"Absorption","D":"Scattering"},"answer":"B","explanation":"Speed changes in medium."},
+  {"question":"Which radiation has highest energy?","options":{"A":"Radio","B":"Microwave","C":"UV","D":"Gamma"},"answer":"D","explanation":"Gamma rays highest frequency."}
+]
