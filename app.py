@@ -1,7 +1,6 @@
 import streamlit as st
 import json
 import os
-from streamlit.runtime.scriptrunner import RerunException  # Updated import for rerun
 
 st.set_page_config(page_title="NEET Offline Practice", layout="centered")
 
@@ -49,10 +48,6 @@ if "answers" not in st.session_state:
 # -------------------- NAVIGATION --------------------
 def go(page):
     st.session_state.page = page
-    try:
-        st.experimental_rerun()
-    except RerunException:
-        pass
 
 # -------------------- HOME PAGE --------------------
 def home():
@@ -72,7 +67,8 @@ def books_page():
         st.markdown(f"### {subject}")
         st.markdown(f"[🔗 Open Official NCERT Book]({link})")
 
-    st.button("⬅ Back", on_click=go, args=("Home",))
+    if st.button("⬅ Back"):
+        go("Home")
 
 # -------------------- PRACTICE PAGE --------------------
 def practice_page():
@@ -121,12 +117,7 @@ def calculate_result(subject, mcqs):
 
     st.session_state.score = score
     st.session_state.total = len(mcqs) * scheme.get("correct", 1)
-    st.session_state.page = "Result"
-
-    try:
-        st.experimental_rerun()
-    except RerunException:
-        pass
+    go("Result")
 
 def result_page():
     st.title("📊 Result")
@@ -137,7 +128,15 @@ def result_page():
         st.balloons()
         st.success("🏆 PASSED (Certificate Eligible)")
 
-    st.button("🏠 Home", on_click=go, args=("Home",))
+        # ✅ Add certificate download / official website redirect
+        if st.button("🎓 Get Certificate"):
+            st.markdown(
+                "[🔗 Visit Official Certificate Page](https://ncert.nic.in/)",
+                unsafe_allow_html=True
+            )
+
+    if st.button("🏠 Home"):
+        go("Home")
 
 # -------------------- ROUTER --------------------
 if st.session_state.page == "Home":
