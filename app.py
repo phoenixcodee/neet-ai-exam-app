@@ -14,7 +14,7 @@ def load_layout():
 
 layout = load_layout()
 
-# -------------------- NCERT BOOK LINKS (HARDCODED) --------------------
+# -------------------- NCERT BOOK LINKS --------------------
 ncert_links = {
     "Biology": "https://ncert.nic.in/textbook.php?lebo1=0-22",
     "Physics": "https://ncert.nic.in/textbook.php?leph1=0-2",
@@ -28,21 +28,27 @@ if "page" not in st.session_state:
 if "score" not in st.session_state:
     st.session_state.score = 0
 
+if "total" not in st.session_state:
+    st.session_state.total = 0
+
 if "answers" not in st.session_state:
     st.session_state.answers = {}
 
 # -------------------- NAVIGATION --------------------
 def go(page):
     st.session_state.page = page
-    st.experimental_rerun()
+    try:
+        st.experimental_rerun()
+    except st.script_runner.RerunException:
+        pass
 
 # -------------------- HOME PAGE --------------------
 def home():
     st.title(layout["app_title"])
     st.subheader("NCERT Based | Real Exam Pattern")
 
-    for item in layout["home_menu"]:
-        if st.button(item["title"]):
+    for idx, item in enumerate(layout["home_menu"]):
+        if st.button(item["title"], key=f"home_{idx}"):
             go(item["page"])
         st.caption(item["description"])
 
@@ -61,16 +67,23 @@ def practice_page():
     st.title("📝 MCQ Practice")
 
     subject = st.selectbox("Select Subject", layout["subjects"])
+
+    # Load MCQs
     mcqs = load_mcqs(subject)
 
-    st.session_state.answers = {}
+    # Initialize answers if not already set
+    if subject not in st.session_state.answers:
+        st.session_state.answers[subject] = {}
 
     for i, q in enumerate(mcqs):
         st.markdown(f"**Q{i+1}. {q['question']}**")
-        st.session_state.answers[i] = st.radio(
+        st.session_state.answers[subject][i] = st.radio(
             "Choose option:",
             list(q["options"].keys()),
-            key=f"{subject}_{i}"
+            key=f"{subject}_{i}",
+            index=list(q["options"].keys()).index(
+                st.session_state.answers[subject].get(i, list(q["options"].keys())[0])
+            )
         )
 
     if st.button("✅ Submit"):
@@ -82,15 +95,20 @@ def calculate_result(subject, mcqs):
     scheme = layout["marking_scheme"]
 
     for i, q in enumerate(mcqs):
-        if st.session_state.answers.get(i) == q["answer"]:
+        selected = st.session_state.answers[subject].get(i)
+        if selected == q["answer"]:
             score += scheme["correct"]
-        elif st.session_state.answers.get(i):
+        elif selected:
             score += scheme["wrong"]
 
     st.session_state.score = score
     st.session_state.total = len(mcqs) * scheme["correct"]
     st.session_state.page = "Result"
-    st.experimental_rerun()
+
+    try:
+        st.experimental_rerun()
+    except st.script_runner.RerunException:
+        pass
 
 def result_page():
     st.title("📊 Result")
