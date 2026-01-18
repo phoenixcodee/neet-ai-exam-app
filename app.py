@@ -82,7 +82,7 @@ def practice_page():
     subject = st.selectbox("Select Subject", subjects)
 
     # Load MCQs
-    mcq = load_mcq(subject)
+    mcq = mcq(subject)
     if not mcq:
         st.warning("No MCQs found for this subject.")
         return
