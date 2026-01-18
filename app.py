@@ -6,9 +6,9 @@ from streamlit.runtime.scriptrunner import RerunException  # Updated import for 
 st.set_page_config(page_title="NEET Offline Practice", layout="centered")
 
 # -------------------- LOAD DATA --------------------
-def load_mcqs(subject):
-    """Load MCQs JSON file safely"""
-    path = os.path.join(os.path.dirname(__file__), "mcqs", f"{subject.lower()}.json")
+def load_mcq(subject):
+    """Load MCQs JSON file safely from 'mcq' folder"""
+    path = os.path.join(os.path.dirname(__file__), "mcq", f"{subject.lower()}.json")
     if not os.path.exists(path):
         st.error(f"MCQ file for '{subject}' not found!\nExpected at: {path}")
         return []
@@ -82,8 +82,8 @@ def practice_page():
     subject = st.selectbox("Select Subject", subjects)
 
     # Load MCQs
-    mcq = load_mcq(subject)
-    if not mcq:
+    mcqs = load_mcq(subject)
+    if not mcqs:
         st.warning("No MCQs found for this subject.")
         return
 
