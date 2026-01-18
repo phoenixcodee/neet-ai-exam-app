@@ -1,0 +1,31 @@
+[
+  {"question":"Atomic number represents?","options":{"A":"Neutrons","B":"Protons","C":"Electrons","D":"Mass"},"answer":"B","explanation":"Atomic number = protons."},
+  {"question":"pH < 7 means?","options":{"A":"Basic","B":"Neutral","C":"Acidic","D":"Salt"},"answer":"C","explanation":"Acids have pH < 7."},
+  {"question":"NaCl is?","options":{"A":"Acid","B":"Base","C":"Salt","D":"Oxide"},"answer":"C","explanation":"NaCl is common salt."},
+  {"question":"Valency of oxygen?","options":{"A":"1","B":"2","C":"3","D":"4"},"answer":"B","explanation":"Oxygen valency is 2."},
+  {"question":"HCl is a?","options":{"A":"Base","B":"Salt","C":"Acid","D":"Oxide"},"answer":"C","explanation":"Hydrochloric acid."},
+
+  {"question":"SI unit of amount of substance?","options":{"A":"Kg","B":"Mol","C":"Gram","D":"Litre"},"answer":"B","explanation":"Amount unit is mole."},
+  {"question":"Water formula?","options":{"A":"H2O","B":"HO","C":"H2O2","D":"OH"},"answer":"A","explanation":"Water = H2O."},
+  {"question":"Which is alkali?","options":{"A":"NaOH","B":"HCl","C":"CO2","D":"NH4Cl"},"answer":"A","explanation":"NaOH is alkali."},
+  {"question":"Gas used in photosynthesis?","options":{"A":"O2","B":"CO2","C":"N2","D":"H2"},"answer":"B","explanation":"CO2 is required."},
+  {"question":"Rusting needs?","options":{"A":"Oxygen","B":"Water","C":"Both","D":"None"},"answer":"C","explanation":"Rusting requires O2 & water."},
+
+  {"question":"Most abundant gas in air?","options":{"A":"Oxygen","B":"Carbon dioxide","C":"Nitrogen","D":"Argon"},"answer":"C","explanation":"78% Nitrogen."},
+  {"question":"Chemical formula of baking soda?","options":{"A":"Na2CO3","B":"NaHCO3","C":"NaOH","D":"NH4Cl"},"answer":"B","explanation":"Sodium bicarbonate."},
+  {"question":"pH of pure water?","options":{"A":"5","B":"6","C":"7","D":"8"},"answer":"C","explanation":"Neutral pH."},
+  {"question":"Which is metal?","options":{"A":"Sulphur","B":"Oxygen","C":"Iron","D":"Carbon"},"answer":"C","explanation":"Iron is metal."},
+  {"question":"Which bond shares electrons?","options":{"A":"Ionic","B":"Covalent","C":"Metallic","D":"Hydrogen"},"answer":"B","explanation":"Covalent bond."},
+
+  {"question":"CaCO3 on heating gives?","options":{"A":"CaO + CO2","B":"Ca + CO2","C":"CaO","D":"CaCO3"},"answer":"A","explanation":"Thermal decomposition."},
+  {"question":"Strong acid example?","options":{"A":"CH3COOH","B":"HCl","C":"H2CO3","D":"NH4OH"},"answer":"B","explanation":"HCl strong acid."},
+  {"question":"Which is reducing agent?","options":{"A":"Oxygen","B":"Hydrogen","C":"Chlorine","D":"Ozone"},"answer":"B","explanation":"Hydrogen reduces."},
+  {"question":"Chemical formula of ammonia?","options":{"A":"NH3","B":"NH4","C":"NO2","D":"N2H4"},"answer":"A","explanation":"Ammonia NH3."},
+  {"question":"Metal extraction from ore?","options":{"A":"Distillation","B":"Smelting","C":"Evaporation","D":"Filtration"},"answer":"B","explanation":"Smelting process."},
+
+  {"question":"Which is noble gas?","options":{"A":"O2","B":"N2","C":"He","D":"H2"},"answer":"C","explanation":"Helium is noble gas."},
+  {"question":"Atomic mass unit symbol?","options":{"A":"kg","B":"u","C":"g","D":"mol"},"answer":"B","explanation":"Atomic mass unit is u."},
+  {"question":"Which is organic compound?","options":{"A":"CO2","B":"CH4","C":"NaCl","D":"NH3"},"answer":"B","explanation":"CH4 is organic."},
+  {"question":"Acid + Base gives?","options":{"A":"Salt","B":"Water","C":"Both","D":"None"},"answer":"C","explanation":"Neutralization."},
+  {"question":"Which gas causes greenhouse effect?","options":{"A":"O2","B":"N2","C":"CO2","D":"He"},"answer":"C","explanation":"CO2 traps heat."}
+]
