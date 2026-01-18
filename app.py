@@ -69,7 +69,7 @@ def practice_page():
     subject = st.selectbox("Select Subject", layout["subjects"])
 
     # Load MCQs
-    mcqs = load_mcqs(subject)
+    mcq = load_mcq(subject)
 
     # Initialize answers if not already set
     if subject not in st.session_state.answers:
