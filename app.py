@@ -1,159 +1,114 @@
 import streamlit as st
-import time
-from openai import OpenAI
+import json
 
-# ================= CONFIG =================
-st.set_page_config(
-    page_title="NEET AI Exam Platform",
-    layout="wide"
-)
+st.set_page_config(page_title="NEET Offline Practice", layout="centered")
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# -------------------- LOAD DATA --------------------
+def load_mcqs(subject):
+    with open(f"mcqs/{subject.lower()}.json", "r", encoding="utf-8") as f:
+        return json.load(f)
 
-TOTAL_TIME = 200 * 60
-MARKS_CORRECT = 4
-MARKS_WRONG = -1
+def load_layout():
+    with open("config/layout.json", "r") as f:
+        return json.load(f)
 
-# ================= NCERT LINKS =================
-NCERT_LINKS = {
-    "Physics": "https://ncert.nic.in/textbook.php?keph1=0-7",
-    "Chemistry": "https://ncert.nic.in/textbook.php?kech1=0-6",
-    "Biology": "https://ncert.nic.in/textbook.php?kebo1=0-19",
+layout = load_layout()
+
+# -------------------- NCERT BOOK LINKS (HARDCODED) --------------------
+ncert_links = {
+    "Biology": "https://ncert.nic.in/textbook.php?lebo1=0-22",
+    "Physics": "https://ncert.nic.in/textbook.php?leph1=0-2",
+    "Chemistry": "https://ncert.nic.in/textbook.php?lech1=0-2"
 }
 
-# ================= AI MCQ GENERATOR =================
-def generate_mcqs(subject, count, mode="practice"):
-    if mode == "exam":
-        instruction = "Do NOT show answers or explanations."
-    else:
-        instruction = "Include Answer and NCERT Line Explanation."
+# -------------------- SESSION STATE --------------------
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
 
-    prompt = f"""
-    Generate {count} NEET level MCQs strictly from NCERT {subject}.
+if "score" not in st.session_state:
+    st.session_state.score = 0
 
-    Rules:
-    - 4 options (A, B, C, D)
-    - One correct answer
-    - {instruction}
-    - Use NCERT textbook language
-    """
+if "answers" not in st.session_state:
+    st.session_state.answers = {}
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
-    )
+# -------------------- NAVIGATION --------------------
+def go(page):
+    st.session_state.page = page
+    st.experimental_rerun()
 
-    return response.choices[0].message.content
+# -------------------- HOME PAGE --------------------
+def home():
+    st.title(layout["app_title"])
+    st.subheader("NCERT Based | Real Exam Pattern")
 
+    for item in layout["home_menu"]:
+        if st.button(item["title"]):
+            go(item["page"])
+        st.caption(item["description"])
 
-# ================= TIMER =================
-def exam_timer():
-    if "start_time" not in st.session_state:
-        st.session_state.start_time = time.time()
+# -------------------- BOOKS PAGE --------------------
+def books_page():
+    st.title("📚 NCERT Official Textbooks")
 
-    elapsed = int(time.time() - st.session_state.start_time)
-    remaining = max(TOTAL_TIME - elapsed, 0)
+    for subject, link in ncert_links.items():
+        st.markdown(f"### {subject}")
+        st.markdown(f"[🔗 Open Official NCERT Book]({link})")
 
-    mins, secs = divmod(remaining, 60)
-    st.sidebar.markdown(f"⏱ **Time Left:** {mins:02d}:{secs:02d}")
+    st.button("⬅ Back", on_click=go, args=("Home",))
 
-    if remaining == 0:
-        st.session_state.exam_submitted = True
-        st.error("⏰ Time Over! Exam auto-submitted.")
-
-
-# ================= HOME PAGE =================
-def home_page():
-    st.title("🎓 NEET AI Exam Platform")
-
-    st.markdown("""
-    ### What this app offers:
-    - 📘 Official NCERT textbook access
-    - 🧠 AI-powered MCQ practice
-    - 📝 Real NEET exam simulation
-    - 📊 Instant result & analysis
-    """)
-
-    st.subheader("📘 NCERT Textbooks (Official)")
-    cols = st.columns(3)
-    for col, (sub, link) in zip(cols, NCERT_LINKS.items()):
-        with col:
-            st.link_button(f"{sub} NCERT Book", link)
-
-
-# ================= PRACTICE PAGE =================
+# -------------------- PRACTICE PAGE --------------------
 def practice_page():
-    st.title("🧠 MCQ Practice (NCERT Based)")
+    st.title("📝 MCQ Practice")
 
-    subject = st.selectbox("Select Subject", list(NCERT_LINKS.keys()))
-    count = st.slider("Number of Questions", 5, 50, 10)
+    subject = st.selectbox("Select Subject", layout["subjects"])
+    mcqs = load_mcqs(subject)
 
-    if st.button("🚀 Generate MCQs"):
-        with st.spinner("Generating MCQs from NCERT..."):
-            mcqs = generate_mcqs(subject, count, mode="practice")
-            st.markdown(mcqs)
+    st.session_state.answers = {}
 
+    for i, q in enumerate(mcqs):
+        st.markdown(f"**Q{i+1}. {q['question']}**")
+        st.session_state.answers[i] = st.radio(
+            "Choose option:",
+            list(q["options"].keys()),
+            key=f"{subject}_{i}"
+        )
 
-# ================= EXAM MODE =================
-def exam_page():
-    st.title("📝 REAL NEET EXAM MODE")
+    if st.button("✅ Submit"):
+        calculate_result(subject, mcqs)
 
-    exam_timer()
+# -------------------- RESULT PAGE --------------------
+def calculate_result(subject, mcqs):
+    score = 0
+    scheme = layout["marking_scheme"]
 
-    if "exam_questions" not in st.session_state:
-        with st.spinner("Generating NEET Question Paper..."):
-            st.session_state.exam_questions = {
-                "Physics": generate_mcqs("Physics", 45, "exam"),
-                "Chemistry": generate_mcqs("Chemistry", 45, "exam"),
-                "Biology": generate_mcqs("Biology", 90, "exam"),
-            }
-            st.session_state.exam_submitted = False
+    for i, q in enumerate(mcqs):
+        if st.session_state.answers.get(i) == q["answer"]:
+            score += scheme["correct"]
+        elif st.session_state.answers.get(i):
+            score += scheme["wrong"]
 
-    section = st.selectbox(
-        "Select Section",
-        ["Physics", "Chemistry", "Biology"]
-    )
+    st.session_state.score = score
+    st.session_state.total = len(mcqs) * scheme["correct"]
+    st.session_state.page = "Result"
+    st.experimental_rerun()
 
-    st.markdown(st.session_state.exam_questions[section])
-
-    if st.button("📤 Submit Exam"):
-        st.session_state.exam_submitted = True
-
-
-# ================= RESULT PAGE =================
 def result_page():
-    st.title("📊 NEET Exam Result")
+    st.title("📊 Result")
 
-    # Dummy result (OMR logic can be added)
-    correct, wrong, unattempted = 120, 40, 20
-    score = (correct * MARKS_CORRECT) + (wrong * MARKS_WRONG)
+    st.success(f"Score: {st.session_state.score} / {st.session_state.total}")
 
-    st.success(f"🎯 Score: {score} / 720")
+    if st.session_state.score >= st.session_state.total * 0.6:
+        st.balloons()
+        st.success("🏆 PASSED (Certificate Eligible)")
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Correct", correct)
-    c2.metric("Wrong", wrong)
-    c3.metric("Unattempted", unattempted)
+    st.button("🏠 Home", on_click=go, args=("Home",))
 
-
-# ================= NAVIGATION =================
-page = st.sidebar.radio(
-    "Navigation",
-    ["🏠 Home", "📘 NCERT Books", "🧠 Practice MCQs", "📝 Real NEET Exam", "📊 Result"]
-)
-
-if page == "🏠 Home":
-    home_page()
-
-elif page == "📘 NCERT Books":
-    home_page()
-
-elif page == "🧠 Practice MCQs":
+# -------------------- ROUTER --------------------
+if st.session_state.page == "Home":
+    home()
+elif st.session_state.page == "Books":
+    books_page()
+elif st.session_state.page == "Practice":
     practice_page()
-
-elif page == "📝 Real NEET Exam":
-    exam_page()
-
-elif page == "📊 Result":
+elif st.session_state.page == "Result":
     result_page()
