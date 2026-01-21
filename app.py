@@ -1,149 +1,150 @@
 import streamlit as st
-import json
-import os
+import requests
 
-st.set_page_config(page_title="NEET Offline Practice", layout="centered")
+# ================= CONFIG =================
+API_URL = "https://api.mistral.ai/v1/chat/completions"
+MISTRAL_API_KEY = st.secrets["MISTRAL_API_KEY"]
 
-# -------------------- LOAD DATA --------------------
-def load_mcq(subject):
-    """Load MCQs JSON file safely from 'mcq' folder"""
-    path = os.path.join(os.path.dirname(__file__), "mcq", f"{subject.lower()}.json")
-    if not os.path.exists(path):
-        st.error(f"MCQ file for '{subject}' not found!\nExpected at: {path}")
-        return []
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def load_layout():
-    """Load layout configuration JSON safely"""
-    path = os.path.join(os.path.dirname(__file__), "config", "layout.json")
-    if not os.path.exists(path):
-        st.error(f"Layout file not found!\nExpected at: {path}")
-        return {}
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-layout = load_layout()
-
-# -------------------- NCERT BOOK LINKS --------------------
-ncert_links = {
-    "Biology": "https://ncert.nic.in/textbook.php?lebo1=0-22",
-    "Physics": "https://ncert.nic.in/textbook.php?leph1=0-2",
-    "Chemistry": "https://ncert.nic.in/textbook.php?lech1=0-2"
+HEADERS = {
+    "Authorization": f"Bearer {MISTRAL_API_KEY}",
+    "Content-Type": "application/json"
 }
 
-# -------------------- SESSION STATE --------------------
-if "page" not in st.session_state:
-    st.session_state.page = "Home"
+NCERT_LINK = "https://ncert.nic.in/textbook.php"
 
-if "score" not in st.session_state:
-    st.session_state.score = 0
+# ================= NCERT CHAPTERS =================
+# This is used to pick a default chapter for MCQs automatically
+NCERT_CHAPTERS = {
+    "11": {
+        "Biology": ["The Cell", "Plant Physiology", "Human Physiology"],
+        "Chemistry": ["Some Basic Concepts", "Structure of Atom", "Chemical Bonding"],
+        "Physics": ["Physical world", "Kinematics", "Laws of Motion"]
+    },
+    "12": {
+        "Biology": ["Reproduction", "Genetics", "Biotechnology"],
+        "Chemistry": ["Solid State", "Solutions", "Electrochemistry"],
+        "Physics": ["Electrostatics", "Current Electricity", "Magnetism"]
+    }
+}
 
-if "total" not in st.session_state:
-    st.session_state.total = 0
+# ================= INTENT DETECTION =================
+def detect_intent(text):
+    text = text.lower()
+    if "ncert" in text:
+        return "ncert"
+    if "mcq" in text or "questions" in text or "generate mcq" in text:
+        return "mcq"
+    return "theory"
 
-if "answers" not in st.session_state:
-    st.session_state.answers = {}
+# ================= AUTO DETECT SUBJECT + CLASS =================
+def auto_detect_subject_class(text):
+    text = text.lower()
+    # Biology keywords
+    biology_keywords = ["cell", "photosynthesis", "reproduction", "genetics", "enzyme", "dna", "protein", "meiosis"]
+    chemistry_keywords = ["atom", "bonding", "reaction", "solution", "acid", "base", "electrochemistry", "oxidation"]
+    physics_keywords = ["force", "motion", "electric", "current", "magnetism", "kinematics", "energy"]
 
-# -------------------- NAVIGATION --------------------
-def go(page):
-    st.session_state.page = page
+    if any(word in text for word in biology_keywords):
+        return "Biology", "11"
+    elif any(word in text for word in chemistry_keywords):
+        return "Chemistry", "11"
+    elif any(word in text for word in physics_keywords):
+        return "Physics", "11"
+    else:
+        # default
+        return "Biology", "11"
 
-# -------------------- HOME PAGE --------------------
-def home():
-    st.title(layout.get("app_title", "NEET Offline Practice"))
-    st.subheader("NCERT Based | Real Exam Pattern")
+# ================= THEORY ANSWER =================
+def generate_theory_answer(question, subject):
+    prompt = f"""
+You are a NEET expert teacher.
+Answer strictly based on NCERT syllabus.
+Subject: {subject}
+Question: {question}
+Rules:
+- NCERT-aligned
+- NEET exam style
+- Simple, clear explanation
+- No MCQs
+"""
+    payload = {
+        "model": "mistral-medium-latest",
+        "messages": [
+            {"role": "system", "content": "You are a NEET tutor."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 600
+    }
+    response = requests.post(API_URL, headers=HEADERS, json=payload)
+    return response.json()["choices"][0]["message"]["content"]
 
-    for idx, item in enumerate(layout.get("home_menu", [])):
-        if st.button(item.get("title", f"Menu {idx}"), key=f"home_{idx}"):
-            go(item.get("page", "Home"))
-        st.caption(item.get("description", ""))
+# ================= MCQ GENERATOR =================
+def generate_mcqs(question):
+    # Detect subject and class automatically
+    subject, ncert_class = auto_detect_subject_class(question)
+    # Pick the first chapter automatically
+    chapter = NCERT_CHAPTERS[ncert_class][subject][0]
 
-# -------------------- BOOKS PAGE --------------------
-def books_page():
-    st.title("📚 NCERT Official Textbooks")
+    prompt = f"""
+Generate 10 NEET-level MCQs strictly from NCERT.
+Subject: {subject}
+Class: {ncert_class}
+Chapter: {chapter}
+Rules:
+- NEET pattern
+- NCERT only
+- Provide correct answer and explanation
+"""
+    payload = {
+        "model": "mistral-medium-latest",
+        "messages": [
+            {"role": "system", "content": "You are a NEET MCQ generator."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.4,
+        "max_tokens": 1200
+    }
+    response = requests.post(API_URL, headers=HEADERS, json=payload)
+    return response.json()["choices"][0]["message"]["content"]
 
-    for subject, link in ncert_links.items():
-        st.markdown(f"### {subject}")
-        st.markdown(f"[🔗 Open Official NCERT Book]({link})")
+# ================= STREAMLIT UI =================
+st.set_page_config(page_title="NEET AI Chatbot", page_icon="🧠")
+st.title("🧠 NEET AI Chatbot")
+st.caption("NCERT-Based Biology • Chemistry • Physics")
 
-    if st.button("⬅ Back"):
-        go("Home")
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# -------------------- PRACTICE PAGE --------------------
-def practice_page():
-    st.title("📝 MCQ Practice")
+# Display chat history
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-    subjects = layout.get("subjects", ["Biology", "Physics", "Chemistry"])
-    subject = st.selectbox("Select Subject", subjects)
+# User input
+user_input = st.chat_input("Ask NEET questions or type 'Generate MCQs'")
 
-    # Load MCQs
-    mcqs = load_mcq(subject)
-    if not mcqs:
-        st.warning("No MCQs found for this subject.")
-        return
+if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-    # Initialize answers if not already set
-    if subject not in st.session_state.answers:
-        st.session_state.answers[subject] = {}
+    intent = detect_intent(user_input)
 
-    for i, q in enumerate(mcqs):
-        st.markdown(f"**Q{i+1}. {q['question']}**")
-        options = list(q["options"].keys())
-        default_index = 0
-        if i in st.session_state.answers[subject]:
-            default_index = options.index(st.session_state.answers[subject][i])
-        st.session_state.answers[subject][i] = st.radio(
-            "Choose option:",
-            options,
-            key=f"{subject}_{i}",
-            index=default_index
-        )
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            if intent == "ncert":
+                response = f"📘 [Official NCERT Website]({NCERT_LINK})"
 
-    if st.button("✅ Submit"):
-        calculate_result(subject, mcqs)
+            elif intent == "mcq":
+                response = generate_mcqs(user_input)
 
-# -------------------- RESULT PAGE --------------------
-def calculate_result(subject, mcqs):
-    score = 0
-    scheme = layout.get("marking_scheme", {"correct": 1, "wrong": 0})
+            else:  # theory
+                subject, ncert_class = auto_detect_subject_class(user_input)
+                response = generate_theory_answer(user_input, subject)
 
-    for i, q in enumerate(mcqs):
-        selected = st.session_state.answers[subject].get(i)
-        if selected == q["answer"]:
-            score += scheme.get("correct", 1)
-        elif selected:
-            score += scheme.get("wrong", 0)
+            st.markdown(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
 
-    st.session_state.score = score
-    st.session_state.total = len(mcqs) * scheme.get("correct", 1)
-    go("Result")
-
-def result_page():
-    st.title("📊 Result")
-
-    st.success(f"Score: {st.session_state.score} / {st.session_state.total}")
-
-    if st.session_state.score >= st.session_state.total * 0.6:
-        st.balloons()
-        st.success("🏆 PASSED (Certificate Eligible)")
-
-        # ✅ Add certificate download / official website redirect
-        if st.button("🎓 Get Certificate"):
-            st.markdown(
-                "[🔗 Visit Official Certificate Page](https://ncert.nic.in/)",
-                unsafe_allow_html=True
-            )
-
-    if st.button("🏠 Home"):
-        go("Home")
-
-# -------------------- ROUTER --------------------
-if st.session_state.page == "Home":
-    home()
-elif st.session_state.page == "Books":
-    books_page()
-elif st.session_state.page == "Practice":
-    practice_page()
-elif st.session_state.page == "Result":
-    result_page()
+st.markdown("---")
+st.markdown("🎯 Designed for NEET Aspirants | NCERT Focused | AI Powered")
