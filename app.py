@@ -150,4 +150,7 @@ if user_input:
                 response = generate_theory(user_input, subject, ncert_class)
 
             st.markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": r_
+            st.session_state.messages.append({"role": "assistant", "content": response})
+
+st.markdown("---")
+st.markdown("🎯 NEET Focused | NCERT Strict | Step-by-Step Numericals")
