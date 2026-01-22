@@ -19,38 +19,46 @@ NCERT_BOOK_LINKS = {
 # ================= INTENT DETECTION =================
 def detect_intent(text):
     text = text.lower()
-
     if "ncert" in text or "book" in text or "textbook" in text:
         return "ncert"
     if "mcq" in text:
         return "mcq"
-    if any(word in text for word in ["calculate", "solve", "numerical", "find"]):
+    if any(w in text for w in ["solve", "calculate", "numerical", "find"]):
         return "problem"
     return "theory"
-
-# ================= CLASS DETECTION (MANUAL ONLY) =================
-def detect_class(text):
-    text = text.lower()
-    if "class 11" in text or "11th" in text:
-        return "11"
-    if "class 12" in text or "12th" in text:
-        return "12"
-    return None
 
 # ================= SUBJECT DETECTION =================
 def detect_subject(text):
     text = text.lower()
-
-    if any(w in text for w in ["plant", "leaf", "photosynthesis", "xylem"]):
-        return "Botany"
-    if any(w in text for w in ["animal", "heart", "kidney", "human"]):
-        return "Zoology"
-    if any(w in text for w in ["atom", "reaction", "ph", "mole"]):
-        return "Chemistry"
-    if any(w in text for w in ["force", "current", "voltage", "velocity"]):
+    if any(w in text for w in ["force", "current", "voltage", "motion", "energy"]):
         return "Physics"
-
+    if any(w in text for w in ["atom", "reaction", "mole", "ph"]):
+        return "Chemistry"
+    if any(w in text for w in ["plant", "leaf", "photosynthesis"]):
+        return "Botany"
+    if any(w in text for w in ["animal", "heart", "human"]):
+        return "Zoology"
     return "Biology"
+
+# ================= AUTO CLASS DETECTION (BACKGROUND) =================
+def auto_detect_class_for_problem(text, subject):
+    text = text.lower()
+
+    if subject == "Physics":
+        class11 = ["motion", "velocity", "acceleration", "work", "energy", "laws of motion"]
+        class12 = ["electric", "current", "potential", "capacitance", "magnetic", "ray optics"]
+
+    elif subject == "Chemistry":
+        class11 = ["mole", "atomic", "periodic", "thermodynamics", "equilibrium"]
+        class12 = ["electrochemistry", "coordination", "kinetics", "surface chemistry"]
+
+    else:
+        class11 = ["cell", "tissue", "plant", "animal"]
+        class12 = ["genetics", "reproduction", "biotechnology"]
+
+    if any(k in text for k in class12):
+        return "12"
+    return "11"
 
 # ================= MISTRAL API CALL =================
 def call_mistral(prompt, max_tokens):
@@ -63,17 +71,16 @@ def call_mistral(prompt, max_tokens):
         "temperature": 0.3,
         "max_tokens": max_tokens
     }
-
     response = requests.post(API_URL, headers=HEADERS, json=payload)
     return response.json()["choices"][0]["message"]["content"]
 
 # ================= THEORY =================
-def generate_theory(question, subject, ncert_class):
+def generate_theory(question, subject):
     prompt = f"""
 Answer strictly from NCERT.
-Class: {ncert_class}
-Subject: {subject}
 Explain clearly in NEET exam style.
+
+Subject: {subject}
 
 Question:
 {question}
@@ -81,93 +88,86 @@ Question:
     return call_mistral(prompt, 600)
 
 # ================= PROBLEM SOLVER =================
-def solve_problem(question, subject, ncert_class):
+def solve_problem(question, subject):
+    ncert_class = auto_detect_class_for_problem(question, subject)
+
+    if ncert_class == "11":
+        scope = "Use ONLY NCERT Class 11 formulas and simple explanations."
+    else:
+        scope = "Use ONLY NCERT Class 12 formulas with detailed derivation."
+
     prompt = f"""
-Solve the NCERT-based problem step by step.
+You are a NEET expert teacher.
 
-Rules:
-- Given
-- Formula
-- Substitution
-- Calculation
-- Final Answer
+{scope}
 
-Class: {ncert_class}
+Follow this format strictly:
+1. Given
+2. Formula
+3. Substitution
+4. Calculation
+5. Final Answer
+
 Subject: {subject}
+NCERT Class: {ncert_class}
 
-Question:
+Problem:
 {question}
 """
-    return call_mistral(prompt, 800)
+    return call_mistral(prompt, 900)
 
 # ================= MCQ GENERATOR =================
-def generate_mcqs(subject, ncert_class):
+def generate_mcqs(subject):
+    ncert_class = auto_detect_class_for_problem(subject, subject)
     prompt = f"""
 Generate 10 NEET-level MCQs strictly from NCERT.
 
-Class: {ncert_class}
 Subject: {subject}
+NCERT Class: {ncert_class}
 
-Rules:
-- 4 options each
-- Correct answer
-- Short explanation
+Provide answers with brief explanation.
 """
     return call_mistral(prompt, 1200)
 
 # ================= STREAMLIT UI =================
 st.set_page_config(page_title="NEET AI Tutor", page_icon="📘")
 st.title("📘 NEET AI Tutor (NCERT Based)")
-st.caption("Manual Class Selection • Step-by-Step Numericals")
+st.caption("Smart Class Detection • Step-by-Step Numericals")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat history
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-user_input = st.chat_input(
-    "Examples: 'NCERT Class 11 book', 'Solve this numerical', 'Generate MCQs'"
-)
+user_input = st.chat_input("Ask NEET questions or solve problems")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
-
     intent = detect_intent(user_input)
-    ncert_class = detect_class(user_input)
     subject = detect_subject(user_input)
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
 
             if intent == "ncert":
-                if ncert_class:
-                    response = f"📘 [NCERT Class {ncert_class} Textbooks (Official)]({NCERT_BOOK_LINKS[ncert_class]})"
-                else:
-                    response = "❗ Please specify the class (Class 11 or Class 12)."
+                response = (
+                    "📘 [NCERT Class 11 Books](https://ncert.nic.in/textbook.php?lebo1=0-16)\n\n"
+                    "📗 [NCERT Class 12 Books](https://ncert.nic.in/textbook.php?lebo1=17-32)"
+                )
 
             elif intent == "mcq":
-                if ncert_class:
-                    response = generate_mcqs(subject, ncert_class)
-                else:
-                    response = "❗ Please mention Class 11 or Class 12 for MCQs."
+                response = generate_mcqs(subject)
 
             elif intent == "problem":
-                if ncert_class:
-                    response = solve_problem(user_input, subject, ncert_class)
-                else:
-                    response = "❗ Please mention Class 11 or Class 12 for problem solving."
+                response = solve_problem(user_input, subject)
 
-            else:  # THEORY
-                if ncert_class:
-                    response = generate_theory(user_input, subject, ncert_class)
-                else:
-                    response = "❗ Please mention Class 11 or Class 12 for theory explanation."
+            else:
+                response = generate_theory(user_input, subject)
 
             st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
 
 st.markdown("---")
-st.markdown("🎯 NEET Focused • NCERT Strict • User-Controlled Output")
+st.markdown("🎯 NEET Focused • NCERT Strict • Intelligent Class Handling")
